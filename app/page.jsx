@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   blankState,
   buildAnalytics,
+  buildFinalConclusion,
   buildTodayClockState,
   calculateMetrics,
   computeAutoR,
@@ -42,8 +43,18 @@ const SESSION_SEGMENTS = [
 const APP_VIEWS = [
   { id: "today", label: "Today" },
   { id: "trades", label: "Trades" },
+  { id: "conclusion", label: "Conclusion" },
   { id: "stats", label: "Stats" },
   { id: "journal", label: "Journal" }
+];
+
+const ANALYSIS_STEPS = [
+  "Reading bias and daily prep",
+  "Mapping profile matrix",
+  "Checking orderflow signals",
+  "Evaluating execution log",
+  "Weighing risk conditions",
+  "Building final verdict"
 ];
 
 const BIAS_OPTIONS = [
@@ -173,6 +184,8 @@ export default function Page() {
     lastSyncedAt: "",
     error: ""
   });
+  const [conclusionLoading, setConclusionLoading] = useState(false);
+  const [conclusionStep, setConclusionStep] = useState(0);
 
   const syncTimeoutRef = useRef(null);
   const importInputRef = useRef(null);
@@ -243,6 +256,35 @@ export default function Page() {
     };
   }, []);
 
+  useEffect(() => {
+    if (activeView !== "conclusion") {
+      return;
+    }
+
+    setConclusionLoading(true);
+    setConclusionStep(0);
+
+    const stepTimer = window.setInterval(() => {
+      setConclusionStep((current) => {
+        if (current >= ANALYSIS_STEPS.length - 1) {
+          window.clearInterval(stepTimer);
+          setConclusionLoading(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, 320);
+
+    const doneTimer = window.setTimeout(() => {
+      setConclusionLoading(false);
+    }, ANALYSIS_STEPS.length * 320 + 320);
+
+    return () => {
+      window.clearInterval(stepTimer);
+      window.clearTimeout(doneTimer);
+    };
+  }, [activeView]);
+
   const instrumentConfig = getInstrumentConfig(activeTicker);
   const metrics = calculateMetrics(journalState, activeTicker);
   const goNoGo = getGoNoGo(journalState, activeTicker);
@@ -251,6 +293,10 @@ export default function Page() {
   const dateLabel = fmtDate(parseDateStr(selectedDateStr));
   const journalKey = createJournalKey(activeTicker, selectedDateStr);
   const autoR = useMemo(() => computeAutoR(tradeForm), [tradeForm]);
+  const finalConclusion = useMemo(
+    () => buildFinalConclusion(journalState, activeTicker),
+    [journalState, activeTicker]
+  );
   const analytics = useMemo(
     () => (hydrated && activeView === "stats" ? buildAnalytics(getAllDayStates(activeTicker), activeTicker) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -748,8 +794,11 @@ export default function Page() {
               </div>
               <div className="status-card">
                 <span className="card-label">Day Conclusion</span>
-                <strong>{metrics.conclusion.label}</strong>
-                <p>{metrics.conclusion.detail}</p>
+                <strong>{finalConclusion.verdict}</strong>
+                <p>{finalConclusion.title}</p>
+                <button className="go-chip" type="button" onClick={() => setActiveView("conclusion")}>
+                  Open verdict
+                </button>
               </div>
               <div className="status-card">
                 <span className="card-label">Execution Score</span>
@@ -1110,7 +1159,7 @@ export default function Page() {
                 </Field>
               </div>
               <div className={`context-banner ${metrics.conclusion.tone === "bull" ? "optional" : ""}`}>
-                Conclusion: {metrics.conclusion.label}. {metrics.conclusion.detail}
+                Orderflow read: {metrics.conclusion.label}. {metrics.conclusion.detail}
               </div>
               <div className="reason-list">
                 {metrics.conclusion.reasons.map((reason) => (
@@ -1118,6 +1167,11 @@ export default function Page() {
                     {reason}
                   </span>
                 ))}
+              </div>
+              <div className="footer-actions">
+                <button className="btn btn-ghost" type="button" onClick={() => setActiveView("conclusion")}>
+                  Generate final conclusion
+                </button>
               </div>
             </StageCard>
 
@@ -1347,6 +1401,109 @@ export default function Page() {
                 <div className="empty-note">No trades logged yet today.</div>
               )}
             </div>
+          </section>
+        ) : null}
+
+        {activeView === "conclusion" ? (
+          <section className="card">
+            <div className="card-head">
+              <div>
+                <div className="eyebrow">Final verdict</div>
+                <h2>Day conclusion</h2>
+                <p className="card-copy">
+                  Built from every input on the protocol — bias, profile map, narrative, orderflow and execution.
+                </p>
+              </div>
+            </div>
+
+            {conclusionLoading ? (
+              <div className="conclusion-loading" role="status" aria-live="polite">
+                <div className="conclusion-spinner" aria-hidden="true" />
+                <div className="conclusion-loading-title">Analyzing all collected data</div>
+                <div className="conclusion-steps">
+                  {ANALYSIS_STEPS.map((step, index) => (
+                    <div
+                      key={step}
+                      className={`conclusion-step ${
+                        index < conclusionStep ? "done" : index === conclusionStep ? "active" : ""
+                      }`}
+                    >
+                      <span className="conclusion-step-dot" />
+                      {step}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={`verdict-hero tone-${finalConclusion.tone}`}>
+                  <div>
+                    <div className="eyebrow">Verdict</div>
+                    <div className="verdict-label">{finalConclusion.verdict}</div>
+                    <div className="verdict-title">{finalConclusion.title}</div>
+                  </div>
+                  <span className={`go-chip ${finalConclusion.tone === "bull" ? "go" : "no-go"}`}>
+                    {finalConclusion.tone === "bull" ? "GO" : finalConclusion.tone === "warn" ? "CAUTION" : finalConclusion.tone === "bear" ? "NO-GO" : "PENDING"}
+                  </span>
+                </div>
+
+                <div className="rule-card">
+                  <div className="field-label">Matched rule</div>
+                  <p className="rule-line">
+                    <span className="rule-keyword">IF</span>
+                    <span>{finalConclusion.explain}</span>
+                  </p>
+                  <p className="rule-line">
+                    <span className="rule-keyword">THEN</span>
+                    <span>{finalConclusion.detail}</span>
+                  </p>
+                </div>
+
+                <div className="conclusion-signals">
+                  {finalConclusion.signals.map((signal) => (
+                    <div key={signal.key} className="signal-chip">
+                      <span>{signal.key}</span>
+                      <strong>{signal.value}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                {finalConclusion.reasons.length ? (
+                  <>
+                    <div className="field-label">Why this verdict</div>
+                    <div className="reason-list">
+                      {finalConclusion.reasons.map((reason) => (
+                        <span key={reason} className="reason-pill">
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+
+                {finalConclusion.warnings.length ? (
+                  <>
+                    <div className="field-label">Warnings</div>
+                    <div className="reason-list">
+                      {finalConclusion.warnings.map((warning) => (
+                        <span key={warning} className="reason-pill warn">
+                          {warning}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+
+                <div className="footer-actions">
+                  <button className="btn btn-ghost" type="button" onClick={() => setActiveView("trades")}>
+                    Review execution log
+                  </button>
+                  <button className="btn btn-primary" type="button" onClick={() => setActiveView("today")}>
+                    Back to protocol
+                  </button>
+                </div>
+              </>
+            )}
           </section>
         ) : null}
 

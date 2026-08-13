@@ -1166,6 +1166,220 @@ a {
   background: color-mix(in srgb, var(--accent, var(--green)) 5%, transparent);
 }
 
+/* ---------- Conclusion ---------- */
+
+.conclusion-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 48px 20px;
+}
+
+.conclusion-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.conclusion-loading-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.conclusion-steps {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.conclusion-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.conclusion-step.active {
+  opacity: 1;
+  color: var(--text);
+  border-color: rgba(59, 227, 122, 0.4);
+}
+
+.conclusion-step.done {
+  opacity: 0.85;
+  color: var(--text-dim);
+  border-color: rgba(59, 227, 122, 0.25);
+}
+
+.conclusion-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.conclusion-step.active .conclusion-step-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.conclusion-step.done .conclusion-step-dot {
+  background: var(--green);
+}
+
+.verdict-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--panel-2);
+  margin-bottom: 16px;
+}
+
+.verdict-label {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 6px 0 4px;
+}
+
+.verdict-title {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.verdict-hero.tone-bull {
+  border-color: rgba(59, 227, 122, 0.35);
+  background: var(--green-soft);
+}
+
+.verdict-hero.tone-bull .verdict-label {
+  color: var(--green);
+}
+
+.verdict-hero.tone-warn {
+  border-color: rgba(215, 189, 115, 0.35);
+  background: var(--amber-soft);
+}
+
+.verdict-hero.tone-warn .verdict-label {
+  color: var(--amber);
+}
+
+.verdict-hero.tone-bear {
+  border-color: rgba(219, 103, 103, 0.35);
+  background: var(--red-soft);
+}
+
+.verdict-hero.tone-bear .verdict-label {
+  color: var(--red);
+}
+
+.verdict-hero.tone-muted {
+  border-color: var(--border-strong);
+  background: var(--panel-2);
+}
+
+.rule-card {
+  padding: 16px 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  margin-bottom: 18px;
+}
+
+.rule-card .field-label {
+  margin-bottom: 10px;
+}
+
+.rule-line {
+  display: flex;
+  gap: 12px;
+  margin: 6px 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.rule-keyword {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--green);
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.conclusion-signals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.signal-chip {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.signal-chip span {
+  display: block;
+  font-family: var(--mono);
+  color: var(--text-faint);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.signal-chip strong {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.reason-pill.warn {
+  background: var(--amber-soft);
+  border-color: rgba(215, 189, 115, 0.3);
+  color: var(--amber);
+}
+
+.go-chip:not(.go):not(.no-go) {
+  background: var(--panel-3);
+  color: var(--text-dim);
+}
+
+.go-chip {
+  cursor: pointer;
+  border: none;
+}
+
 /* ---------- Journal footer ---------- */
 
 .footer-actions {
