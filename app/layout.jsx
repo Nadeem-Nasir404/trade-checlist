@@ -1,4 +1,19 @@
+import { IBM_Plex_Mono, Sora } from "next/font/google";
+
 import "./globals.css";
+
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-disp",
+  display: "swap"
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mono",
+  display: "swap"
+});
 
 export const metadata = {
   title: "Trade Journal Protocol",
@@ -7,7 +22,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${sora.variable} ${plexMono.variable}`}>
       <body>{children}</body>
     </html>
   );

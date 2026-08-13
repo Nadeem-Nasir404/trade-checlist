@@ -16,9 +16,13 @@ The old single HTML file was good for local-only storage, but real Notion sync n
 - readiness gauge and execution score
 - session profile matrix with setup classification
 - daily bias, playbook focus, macro theme, and rule-of-day fields
-- trade blotter with net R, win rate, and best trade stats
+- trade blotter with stop field, auto-R calculation, and day stats (net R, win rate, best trade)
+- performance analytics view: net R, win rate, profit factor, avg win/loss, breakdowns by session and model, day-by-day history
+- world clock strip (UTC / London / New York / Karachi) and 24h session map
 - automatic Notion journal creation and updates
 - markdown export fallback
+- JSON backup export and import for all local data
+- confirmed reset flow so a day cannot be wiped by accident
 
 ## Environment variables
 

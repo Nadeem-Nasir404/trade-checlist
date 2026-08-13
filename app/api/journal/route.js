@@ -218,7 +218,7 @@ function buildBlocks({ ticker, day, state }) {
     safeState.trades.forEach((trade, index) => {
       blocks.push(
         bulletBlock(
-          `${index + 1}. ${trade.loggedAt || "-"} | ${trade.session || "-"} | ${trade.model || "-"} | ${trade.dir} | Entry ${trade.entry} | Exit ${trade.exit || "-"} | Planned RR ${trade.plannedRR || "-"} | R ${trade.r || "-"}`
+          `${index + 1}. ${trade.loggedAt || "-"} | ${trade.session || "-"} | ${trade.model || "-"} | ${trade.dir} | Entry ${trade.entry} | Exit ${trade.exit || "-"} | Stop ${trade.stop || "-"} | Planned RR ${trade.plannedRR || "-"} | R ${trade.r || "-"}`
         )
       );
       blocks.push(paragraphBlock(`Narrative fit: ${trade.narrativeFit || "-"} | Trigger: ${trade.trigger || "No trigger"}`));
