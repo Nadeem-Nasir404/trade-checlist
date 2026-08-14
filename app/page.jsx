@@ -1608,6 +1608,27 @@ export default function Page() {
                   </p>
                 </div>
 
+                <div className={`conclusion-guidance confidence-${finalConclusion.confidence}`}>
+                  <div className="guidance-head">
+                    <div className="field-label">Decision guidance</div>
+                    <span className="confidence-badge">{finalConclusion.confidence} confidence</span>
+                  </div>
+                  <div className="guidance-grid">
+                    <div>
+                      <span>Action</span>
+                      <strong>{finalConclusion.guidance.action}</strong>
+                    </div>
+                    <div>
+                      <span>Confirmation</span>
+                      <strong>{finalConclusion.guidance.confirmation}</strong>
+                    </div>
+                    <div>
+                      <span>Invalidation</span>
+                      <strong>{finalConclusion.guidance.invalidation}</strong>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="conclusion-signals">
                   {finalConclusion.signals.map((signal) => (
                     <div key={signal.key} className="signal-chip">
