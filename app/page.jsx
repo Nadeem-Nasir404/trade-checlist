@@ -846,16 +846,43 @@ export default function Page() {
               unlocked={stages[0].unlocked}
             >
               <div className="task-stack">
-                <div className="task-row task-row-static">
-                  <span className="task-check">{journalState.bias ? <CheckIcon /> : null}</span>
+                <div className={`task-row task-row-static ${journalState.biasSkipped ? "done" : ""}`}>
+                  <span className="task-check">{journalState.bias || journalState.biasSkipped ? <CheckIcon /> : null}</span>
                   <span className="task-copy">
                     <strong>Define the day&apos;s bias</strong>
-                    <small>Pick a directional stance before the first trade.</small>
+                    <small>
+                      {journalState.biasSkipped
+                        ? "Bias skipped — conclusions will rely on the map and key levels."
+                        : "Pick a directional stance, or skip it to keep the bias optional."}
+                    </small>
                   </span>
-                  <SegmentedBias
-                    value={journalState.bias}
-                    onChange={(value) => persistState({ ...journalState, bias: value })}
-                  />
+                  {journalState.biasSkipped ? (
+                    <button
+                      className="btn btn-ghost"
+                      type="button"
+                      onClick={() =>
+                        persistState({ ...journalState, biasSkipped: false, bias: null })
+                      }
+                    >
+                      Set bias
+                    </button>
+                  ) : (
+                    <>
+                      <SegmentedBias
+                        value={journalState.bias}
+                        onChange={(value) => persistState({ ...journalState, bias: value })}
+                      />
+                      <button
+                        className="btn btn-ghost"
+                        type="button"
+                        onClick={() =>
+                          persistState({ ...journalState, biasSkipped: true, bias: null })
+                        }
+                      >
+                        Skip
+                      </button>
+                    </>
+                  )}
                 </div>
                 <ToggleRow
                   title="Wait out the first 30 minutes"
@@ -1078,115 +1105,208 @@ export default function Page() {
             <StageCard
               number="4"
               title="Orderflow Conclusion"
-              subtitle="Use orderflow to confirm continuation, reversal, or stand-aside."
+              subtitle="Turn orderflow on for the full read, or off to conclude on key levels alone."
               complete={stages[3].complete}
               unlocked={stages[3].unlocked}
             >
-              <div className="grid-2">
-                <Field label="HTF POI">
+              <div className="task-stack stage-toggle">
+                <div className={`task-row task-row-static ${journalState.premarket.orderflowEnabled !== false ? "done" : ""}`}>
+                  <span className="task-check">
+                    {journalState.premarket.orderflowEnabled !== false ? <CheckIcon /> : null}
+                  </span>
+                  <span className="task-copy">
+                    <strong>Orderflow analysis</strong>
+                    <small>
+                      {journalState.premarket.orderflowEnabled !== false
+                        ? "Enabled — conclusion uses orderflow, CVD, tape and initiative."
+                        : "Disabled — conclusion uses key levels, price action and liquidity only."}
+                    </small>
+                  </span>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={() =>
+                      updatePremarketField(
+                        "orderflowEnabled",
+                        journalState.premarket.orderflowEnabled === false
+                      )
+                    }
+                  >
+                    {journalState.premarket.orderflowEnabled === false ? "Enable" : "Disable"}
+                  </button>
+                </div>
+              </div>
+
+              <div className={`grid-2 ${journalState.premarket.orderflowEnabled === false ? "soft-block" : ""}`}>
+                <Field label="HTF key level in play">
                   <select
-                    value={journalState.premarket.htfPoi}
-                    onChange={(event) => updatePremarketField("htfPoi", event.target.value)}
+                    value={journalState.premarket.htfKeyLevel}
+                    onChange={(event) => updatePremarketField("htfKeyLevel", event.target.value)}
                   >
                     <option value="">Select</option>
                     <option value="Weekly high / low">Weekly high / low</option>
                     <option value="Daily high / low">Daily high / low</option>
-                    <option value="Value area edge">Value area edge</option>
-                    <option value="Unmitigated order block">Unmitigated order block</option>
                     <option value="HTF fair value gap">HTF fair value gap</option>
+                    <option value="Value area edge (VAH / VAL)">Value area edge (VAH / VAL)</option>
+                    <option value="Unmitigated order block">Unmitigated order block</option>
                     <option value="Open / VWAP reference">Open / VWAP reference</option>
+                    <option value="No key level in play">No key level in play</option>
                   </select>
                 </Field>
-                <Field label="Orderflow">
+                <Field label="Price action at level">
                   <select
-                    value={journalState.premarket.orderFlow}
-                    onChange={(event) => updatePremarketField("orderFlow", event.target.value)}
+                    value={journalState.premarket.priceAtLevel}
+                    onChange={(event) => updatePremarketField("priceAtLevel", event.target.value)}
                   >
                     <option value="">Select</option>
-                    <option value="Displacement with follow-through">Displacement with follow-through</option>
-                    <option value="Absorption at level">Absorption at level</option>
-                    <option value="Failed breakout">Failed breakout</option>
-                    <option value="Sweep then reclaim">Sweep then reclaim</option>
-                    <option value="Trend auction">Trend auction</option>
-                    <option value="Choppy / two-way">Choppy / two-way</option>
+                    <option value="Tapped / swept the level (liquidity taken)">Tapped / swept the level (liquidity taken)</option>
+                    <option value="Holding / consolidating at the level">Holding / consolidating at the level</option>
+                    <option value="Rejected from the level">Rejected from the level</option>
+                    <option value="Accepted through the level">Accepted through the level</option>
+                    <option value="Mid-range / nowhere">Mid-range / nowhere</option>
                   </select>
                 </Field>
-                <Field label="Initiative">
+                <Field label="Liquidity state">
                   <select
-                    value={journalState.premarket.initiative}
-                    onChange={(event) => updatePremarketField("initiative", event.target.value)}
+                    value={journalState.premarket.liquidityState}
+                    onChange={(event) => updatePremarketField("liquidityState", event.target.value)}
                   >
                     <option value="">Select</option>
-                    <option value="Buyers in control">Buyers in control</option>
-                    <option value="Sellers in control">Sellers in control</option>
-                    <option value="No initiative yet">No initiative yet</option>
-                    <option value="Initiative failed">Initiative failed</option>
+                    <option value="Liquidity resting above">Liquidity resting above</option>
+                    <option value="Liquidity resting below">Liquidity resting below</option>
+                    <option value="Liquidity swept above">Liquidity swept above</option>
+                    <option value="Liquidity swept below">Liquidity swept below</option>
+                    <option value="Liquidity tapped on both sides">Liquidity tapped on both sides</option>
+                    <option value="No clean liquidity yet">No clean liquidity yet</option>
                   </select>
                 </Field>
-                <Field label="Response at level">
+                <Field label="Range / balance state">
                   <select
-                    value={journalState.premarket.response}
-                    onChange={(event) => updatePremarketField("response", event.target.value)}
+                    value={journalState.premarket.rangeState}
+                    onChange={(event) => updatePremarketField("rangeState", event.target.value)}
                   >
                     <option value="">Select</option>
-                    <option value="Acceptance above level">Acceptance above level</option>
-                    <option value="Acceptance below level">Acceptance below level</option>
-                    <option value="Rejection from level">Rejection from level</option>
-                    <option value="No clear response">No clear response</option>
-                  </select>
-                </Field>
-                <Field label="CVD / delta">
-                  <select
-                    value={journalState.premarket.cvdState}
-                    onChange={(event) => updatePremarketField("cvdState", event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="Aligned with price">Aligned with price</option>
-                    <option value="Aggression absorbed">Aggression absorbed</option>
-                    <option value="Diverging from price">Diverging from price</option>
-                    <option value="Loading before break">Loading before break</option>
-                    <option value="Flat / non-confirming">Flat / non-confirming</option>
-                  </select>
-                </Field>
-                <Field label="Tape state">
-                  <select
-                    value={journalState.premarket.tapeState}
-                    onChange={(event) => updatePremarketField("tapeState", event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="Fast tape with size">Fast tape with size</option>
-                    <option value="Slow tape / no urgency">Slow tape / no urgency</option>
-                    <option value="Big prints defending level">Big prints defending level</option>
-                    <option value="Exhaustion into level">Exhaustion into level</option>
-                    <option value="Noise only">Noise only</option>
-                  </select>
-                </Field>
-                <Field label="Execution lane">
-                  <select
-                    value={journalState.premarket.executionLane}
-                    onChange={(event) => updatePremarketField("executionLane", event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="Trend / continuation">Trend / continuation</option>
-                    <option value="Mean reversion / fade">Mean reversion / fade</option>
-                    <option value="Wait for confirmation">Wait for confirmation</option>
-                    <option value="No trade / buffer">No trade / buffer</option>
-                  </select>
-                </Field>
-                <Field label="Session liquidity">
-                  <select
-                    value={journalState.premarket.sessionLiquidity}
-                    onChange={(event) => updatePremarketField("sessionLiquidity", event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="Asia sweep likely">Asia sweep likely</option>
-                    <option value="London open raid">London open raid</option>
-                    <option value="New York AM expansion">New York AM expansion</option>
-                    <option value="New York PM mean reversion">New York PM mean reversion</option>
-                    <option value="Multi-session liquidity pool">Multi-session liquidity pool</option>
+                    <option value="In balance (range bound)">In balance (range bound)</option>
+                    <option value="At the range extreme (VAH / VAL)">At the range extreme (VAH / VAL)</option>
+                    <option value="Breaking the range high">Breaking the range high</option>
+                    <option value="Breaking the range low">Breaking the range low</option>
+                    <option value="Expansion after balance">Expansion after balance</option>
                   </select>
                 </Field>
               </div>
+
+              {journalState.premarket.orderflowEnabled !== false ? (
+                <div className="grid-2">
+                  <Field label="HTF POI">
+                    <select
+                      value={journalState.premarket.htfPoi}
+                      onChange={(event) => updatePremarketField("htfPoi", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Weekly high / low">Weekly high / low</option>
+                      <option value="Daily high / low">Daily high / low</option>
+                      <option value="Value area edge">Value area edge</option>
+                      <option value="Unmitigated order block">Unmitigated order block</option>
+                      <option value="HTF fair value gap">HTF fair value gap</option>
+                      <option value="Open / VWAP reference">Open / VWAP reference</option>
+                    </select>
+                  </Field>
+                  <Field label="Orderflow">
+                    <select
+                      value={journalState.premarket.orderFlow}
+                      onChange={(event) => updatePremarketField("orderFlow", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Displacement with follow-through">Displacement with follow-through</option>
+                      <option value="Absorption at level">Absorption at level</option>
+                      <option value="Failed breakout">Failed breakout</option>
+                      <option value="Sweep then reclaim">Sweep then reclaim</option>
+                      <option value="Trend auction">Trend auction</option>
+                      <option value="Choppy / two-way">Choppy / two-way</option>
+                    </select>
+                  </Field>
+                  <Field label="Initiative">
+                    <select
+                      value={journalState.premarket.initiative}
+                      onChange={(event) => updatePremarketField("initiative", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Buyers in control">Buyers in control</option>
+                      <option value="Sellers in control">Sellers in control</option>
+                      <option value="No initiative yet">No initiative yet</option>
+                      <option value="Initiative failed">Initiative failed</option>
+                    </select>
+                  </Field>
+                  <Field label="Response at level">
+                    <select
+                      value={journalState.premarket.response}
+                      onChange={(event) => updatePremarketField("response", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Acceptance above level">Acceptance above level</option>
+                      <option value="Acceptance below level">Acceptance below level</option>
+                      <option value="Rejection from level">Rejection from level</option>
+                      <option value="No clear response">No clear response</option>
+                    </select>
+                  </Field>
+                  <Field label="CVD / delta">
+                    <select
+                      value={journalState.premarket.cvdState}
+                      onChange={(event) => updatePremarketField("cvdState", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Aligned with price">Aligned with price</option>
+                      <option value="Aggression absorbed">Aggression absorbed</option>
+                      <option value="Diverging from price">Diverging from price</option>
+                      <option value="Loading before break">Loading before break</option>
+                      <option value="Flat / non-confirming">Flat / non-confirming</option>
+                    </select>
+                  </Field>
+                  <Field label="Tape state">
+                    <select
+                      value={journalState.premarket.tapeState}
+                      onChange={(event) => updatePremarketField("tapeState", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Fast tape with size">Fast tape with size</option>
+                      <option value="Slow tape / no urgency">Slow tape / no urgency</option>
+                      <option value="Big prints defending level">Big prints defending level</option>
+                      <option value="Exhaustion into level">Exhaustion into level</option>
+                      <option value="Noise only">Noise only</option>
+                    </select>
+                  </Field>
+                  <Field label="Execution lane">
+                    <select
+                      value={journalState.premarket.executionLane}
+                      onChange={(event) => updatePremarketField("executionLane", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Trend / continuation">Trend / continuation</option>
+                      <option value="Mean reversion / fade">Mean reversion / fade</option>
+                      <option value="Wait for confirmation">Wait for confirmation</option>
+                      <option value="No trade / buffer">No trade / buffer</option>
+                    </select>
+                  </Field>
+                  <Field label="Session liquidity">
+                    <select
+                      value={journalState.premarket.sessionLiquidity}
+                      onChange={(event) => updatePremarketField("sessionLiquidity", event.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Asia sweep likely">Asia sweep likely</option>
+                      <option value="London open raid">London open raid</option>
+                      <option value="New York AM expansion">New York AM expansion</option>
+                      <option value="New York PM mean reversion">New York PM mean reversion</option>
+                      <option value="Multi-session liquidity pool">Multi-session liquidity pool</option>
+                    </select>
+                  </Field>
+                </div>
+              ) : (
+                <div className="context-banner optional">
+                  Orderflow detail is off. The conclusion will be driven by the key level, price action and
+                  liquidity state you selected above.
+                </div>
+              )}
               <div className={`context-banner ${metrics.conclusion.tone === "bull" ? "optional" : ""}`}>
                 Orderflow read: {metrics.conclusion.label}. {metrics.conclusion.detail}
               </div>
