@@ -106,16 +106,28 @@ function CheckIcon() {
   );
 }
 
-function StageCard({ number, title, subtitle, complete, unlocked, children }) {
+function LockIcon() {
   return (
-    <section className={`card stage-card ${complete ? "complete" : ""} ${!unlocked ? "locked" : ""}`}>
+    <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true">
+      <rect x="2.2" y="5.2" width="7.6" height="5.2" rx="1.4" fill="currentColor" opacity="0.9" />
+      <path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StageCard({ number, title, subtitle, complete, unlocked, children }) {
+  const statusLabel = complete ? "Done" : unlocked ? "Active" : "Locked";
+  return (
+    <section className={`card stage-card ${complete ? "complete" : ""} ${unlocked ? "unlocked" : "locked"}`}>
       <div className="stage-head">
         <div>
-          <div className="eyebrow">{number}. {title}</div>
+          <div className="eyebrow">
+            <span className="stage-number">{unlocked ? number : <LockIcon />} {title}</span>
+          </div>
           <p className="stage-subtitle">{subtitle}</p>
         </div>
         <span className={`pill ${complete ? "pill-accent" : unlocked ? "pill-live" : ""}`}>
-          {complete ? "Done" : unlocked ? "Active" : "Locked"}
+          {statusLabel}
         </span>
       </div>
       {unlocked ? children : <div className="locked-note">Complete the previous stage to unlock this step.</div>}
@@ -686,6 +698,20 @@ export default function Page() {
         </div>
       </header>
 
+      <div className="ticker-strip" aria-hidden="true">
+        {SESSION_SEGMENTS.map((segment) => (
+          <span
+            key={segment.label}
+            className={`ticker-seg ${segment.tone}`}
+            style={{
+              left: `${(segment.start / 24) * 100}%`,
+              width: `${((segment.end - segment.start) / 24) * 100}%`
+            }}
+          />
+        ))}
+        <span className="ticker-playhead" style={{ left: `${clockState.utcPercent}%` }} />
+      </div>
+
       <div className="content">
         <div className="page-head">
           <div>
@@ -780,10 +806,13 @@ export default function Page() {
         {activeView === "today" ? (
           <>
             <div className="status-row">
-              <div className="status-card">
+              <div className={`status-card gate-card ${goNoGo.verdict === "GO" ? "gate-go" : "gate-no-go"}`}>
                 <span className="card-label">GO / NO-GO</span>
-                <div className={`go-chip ${goNoGo.verdict === "GO" ? "go" : "no-go"}`}>{goNoGo.verdict}</div>
-                <p>{goNoGo.blockers.length ? goNoGo.blockers[0] : "All workflow gates satisfied."}</p>
+                <div className="gate-word">{goNoGo.verdict}</div>
+                <p className="gate-reason">{goNoGo.blockers.length ? goNoGo.blockers[0] : "All workflow gates satisfied."}</p>
+                {goNoGo.blockers.length > 1 ? (
+                  <p className="gate-more">+{goNoGo.blockers.length - 1} more blocker{goNoGo.blockers.length > 2 ? "s" : ""}</p>
+                ) : null}
               </div>
               <div className={`status-card ${setupToneClass}`}>
                 <span className="card-label">
@@ -796,7 +825,7 @@ export default function Page() {
                 <span className="card-label">Day Conclusion</span>
                 <strong>{finalConclusion.verdict}</strong>
                 <p>{finalConclusion.title}</p>
-                <button className="go-chip" type="button" onClick={() => setActiveView("conclusion")}>
+                <button className="btn btn-ghost" type="button" onClick={() => setActiveView("conclusion")}>
                   Open verdict
                 </button>
               </div>
@@ -1442,7 +1471,7 @@ export default function Page() {
                     <div className="verdict-label">{finalConclusion.verdict}</div>
                     <div className="verdict-title">{finalConclusion.title}</div>
                   </div>
-                  <span className={`go-chip ${finalConclusion.tone === "bull" ? "go" : "no-go"}`}>
+                  <span className={`go-chip verdict-chip tone-${finalConclusion.tone}`}>
                     {finalConclusion.tone === "bull" ? "GO" : finalConclusion.tone === "warn" ? "CAUTION" : finalConclusion.tone === "bear" ? "NO-GO" : "PENDING"}
                   </span>
                 </div>
